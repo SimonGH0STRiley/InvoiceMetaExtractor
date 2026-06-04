@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.venv-build/
 dist/
 build/
 node_modules/
@@ -15,3 +16,4 @@ yarn-error.log*
 pnpm-debug.log*
 *.xlsx
 *.pdf
+
