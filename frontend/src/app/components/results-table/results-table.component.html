@@ -1,0 +1,513 @@
+<main class="table-panel">
+  <nz-watermark class="table-watermark" nzContent="SimonGHOSTRiley">
+    <div class="table-summary">{{ tableSummaryText }}</div>
+
+    <nz-table
+      class="table-watermark-cover"
+      nzSize="small"
+      nzBordered
+      nzTableLayout="fixed"
+      [nzData]="displayedRecords"
+      [nzShowPagination]="false"
+      [nzScroll]="{ x: '1280px', y: 'calc(100vh - 238px)' }"
+    >
+      <thead>
+        <tr>
+          <th nzWidth="120px" nzBreakWord>文件名</th>
+          <th
+            nzWidth="100px"
+            [nzFilters]="invoiceTypeFilters"
+            [nzFilterMultiple]="false"
+            [nzFilterFn]="true"
+            (nzFilterChange)="setInvoiceTypeFilterFromNz($event)"
+          >
+            发票类型
+          </th>
+          <th nzWidth="180px" nzCustomFilter>
+            发票号码
+            <nz-filter-trigger
+              [nzActive]="invoiceNumberQuery.trim().length > 0"
+              [nzDropdownMenu]="invoiceNumberMenu"
+            >
+              <nz-icon nzType="search" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th
+            nzWidth="120px"
+            [nzSortFn]="true"
+            [nzSortDirections]="sortDirections"
+            [nzSortOrder]="sortOrderFor('issue_date')"
+            (nzSortOrderChange)="setSortOrder('issue_date', $event)"
+          >
+            开票日期
+          </th>
+          <th nzWidth="120px" nzBreakWord nzCustomFilter>
+            销售方
+            <nz-filter-trigger
+              [nzActive]="sellerQuery.trim().length > 0"
+              [nzDropdownMenu]="sellerMenu"
+            >
+              <nz-icon nzType="search" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th nzWidth="120px" nzBreakWord nzCustomFilter>
+            税目
+            <nz-filter-trigger
+              [nzActive]="taxItemsQuery.trim().length > 0"
+              [nzDropdownMenu]="taxItemsMenu"
+            >
+              <nz-icon nzType="search" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th nzWidth="60px">数量</th>
+          <th
+            nzWidth="120px"
+            nzCustomFilter
+            [nzSortFn]="true"
+            [nzSortDirections]="sortDirections"
+            [nzSortOrder]="sortOrderFor('amount')"
+            (nzSortOrderChange)="setSortOrder('amount', $event)"
+          >
+            金额
+            <nz-filter-trigger
+              [nzActive]="!!(amountRange.min || amountRange.max)"
+              [nzDropdownMenu]="amountMenu"
+            >
+              <nz-icon nzType="filter" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th
+            nzWidth="120px"
+            nzCustomFilter
+            [nzSortFn]="true"
+            [nzSortDirections]="sortDirections"
+            [nzSortOrder]="sortOrderFor('tax_amount')"
+            (nzSortOrderChange)="setSortOrder('tax_amount', $event)"
+          >
+            税额
+            <nz-filter-trigger
+              [nzActive]="!!(taxAmountRange.min || taxAmountRange.max)"
+              [nzDropdownMenu]="taxAmountMenu"
+            >
+              <nz-icon nzType="filter" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th
+            nzWidth="80px"
+            nzCustomFilter
+            [nzSortFn]="true"
+            [nzSortDirections]="sortDirections"
+            [nzSortOrder]="sortOrderFor('tax_rate')"
+            (nzSortOrderChange)="setSortOrder('tax_rate', $event)"
+          >
+            税率
+            <nz-filter-trigger
+              [nzActive]="!!(taxRateRange.min || taxRateRange.max)"
+              [nzDropdownMenu]="taxRateMenu"
+            >
+              <nz-icon nzType="filter" nzTheme="outline" />
+            </nz-filter-trigger>
+          </th>
+          <th nzWidth="60px">校验</th>
+          <th nzWidth="60px">状态</th>
+          <th nzWidth="80px" nzRight>操作</th>
+        </tr>
+      </thead>
+      <tbody
+        cdkDropList
+        [cdkDropListData]="displayedRecords"
+        (cdkDropListDropped)="dropRecord($event)"
+      >
+        @for (record of displayedRecords; track trackByRow($index, record)) {
+        <tr
+          cdkDrag
+          [cdkDragDisabled]="extracting || !!editingRowKey || hasTableTransform"
+          [class.selected-row]="isSelected(record)"
+          (click)="selectRow(record)"
+        >
+          <td [title]="record.source_file">
+            <span class="two-line-ellipsis">
+              {{ basename(record.source_file) }}
+            </span>
+          </td>
+          <td>
+            @if (isEditing(record) && editingRecord) {
+            <nz-select
+              class="edit-select-control"
+              nzDropdownClassName="edit-select-dropdown"
+              [ngModel]="editingRecord.invoice_type"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('invoice_type', $event)"
+            >
+              @for (option of invoiceTypeOptions; track option) {
+              <nz-option [nzValue]="option" [nzLabel]="option"></nz-option>
+              }
+            </nz-select>
+            } @else {
+            {{ record.invoice_type }}
+            }
+          </td>
+          <td
+            class="copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="record.invoice_number"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, record.invoice_number)"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <input
+              nz-input
+              class="edit-cell-control"
+              type="text"
+              [ngModel]="editingRecord.invoice_number"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('invoice_number', $event)"
+            />
+            } @else {
+            {{ record.invoice_number }}
+            }
+          </td>
+          <td>
+            @if (isEditing(record) && editingRecord) {
+            <nz-date-picker
+              class="edit-cell-control"
+              nzFormat="yyyy-MM-dd"
+              [nzAllowClear]="true"
+              [ngModel]="editingIssueDateValue"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingDate($event)"
+            ></nz-date-picker>
+            } @else {
+            {{ record.issue_date | date : "yyyy年M月d日" }}
+            }
+          </td>
+          <td
+            class="copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="record.seller_name"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, record.seller_name)"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <textarea
+              nz-input
+              [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+              class="edit-cell-control"
+              [ngModel]="editingRecord.seller_name"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('seller_name', $event)"
+            ></textarea>
+            } @else {
+            <span class="two-line-ellipsis">
+              {{ record.seller_name }}
+            </span>
+            }
+          </td>
+          <td
+            class="copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="record.tax_items"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, record.tax_items)"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <textarea
+              nz-input
+              [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+              class="edit-cell-control"
+              [ngModel]="editingRecord.tax_items"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('tax_items', $event)"
+            ></textarea>
+            } @else {
+            <span class="two-line-ellipsis">
+              {{ record.tax_items }}
+            </span>
+            }
+          </td>
+          <td>
+            @if (isEditing(record) && editingRecord) {
+            <input
+              nz-input
+              class="edit-cell-control"
+              type="text"
+              [ngModel]="editingRecord.quantity"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('quantity', $event)"
+            />
+            } @else {
+            {{ record.quantity }}
+            }
+          </td>
+          <td
+            class="number-cell copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="formatNumber(record.amount)"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, formatNumber(record.amount))"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <input
+              nz-input
+              class="edit-cell-control number-edit-control"
+              type="number"
+              [ngModel]="editingRecord.amount"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingNumber('amount', $event)"
+            />
+            } @else {
+            {{ formatNumber(record.amount) }}
+            }
+          </td>
+          <td
+            class="number-cell copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="formatNumber(record.tax_amount)"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, formatNumber(record.tax_amount))"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <input
+              nz-input
+              class="edit-cell-control number-edit-control"
+              type="number"
+              [ngModel]="editingRecord.tax_amount"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingNumber('tax_amount', $event)"
+            />
+            } @else {
+            {{ formatNumber(record.tax_amount) }}
+            }
+          </td>
+          <td
+            class="copyable-cell"
+            nz-tooltip
+            [nzTooltipTitle]="record.tax_rate"
+            nzTooltipPlacement="top"
+            (click)="copyCell($event, record.tax_rate)"
+          >
+            @if (isEditing(record) && editingRecord) {
+            <input
+              nz-input
+              class="edit-cell-control"
+              type="text"
+              [ngModel]="editingRecord.tax_rate"
+              (click)="$event.stopPropagation()"
+              (ngModelChange)="updateEditingText('tax_rate', $event)"
+            />
+            } @else {
+            {{ record.tax_rate }}
+            }
+          </td>
+          <td>
+            <nz-tag
+              nz-tooltip
+              [nzTooltipTitle]="record.warnings.join('\n') || null"
+              nzTooltipPlacement="top"
+              [nzColor]="validationColor(record)"
+            >
+              {{ validationText(record) }}
+            </nz-tag>
+          </td>
+          <td>
+            <nz-tag [nzColor]="statusColor(record.status)">
+              {{ statusLabel(record.status) }}
+            </nz-tag>
+          </td>
+          <td nzRight>
+            <div class="action-cell">
+              @if (isEditing(record)) {
+              <button
+                nz-button
+                nzSize="small"
+                nzShape="circle"
+                nz-tooltip
+                nzTooltipTitle="保存"
+                nzTooltipPlacement="top"
+                [disabled]="extracting"
+                (click)="saveEdit($event)"
+              >
+                <nz-icon nzType="save" nzTheme="outline" />
+              </button>
+              } @else {
+              <button
+                nz-button
+                nzSize="small"
+                nzShape="circle"
+                [class.disabled]="extracting"
+                nz-tooltip
+                nzTooltipTitle="编辑"
+                nzTooltipPlacement="top"
+                [disabled]="extracting"
+                (click)="startEdit($event, record)"
+              >
+                <nz-icon nzType="edit" nzTheme="outline" />
+              </button>
+              }
+              <button
+                nz-button
+                nzSize="small"
+                nzShape="circle"
+                nz-tooltip
+                nzTooltipTitle="删除"
+                nzTooltipPlacement="top"
+                nz-popconfirm
+                nzPopconfirmTitle="你确定要删除当前行么？"
+                nzPopconfirmPlacement="top"
+                [disabled]="extracting"
+                (click)="$event.stopPropagation()"
+                (nzOnConfirm)="recordRemoved.emit(record)"
+              >
+                <nz-icon nzType="delete" nzTheme="outline" />
+              </button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </nz-table>
+
+    <nz-dropdown-menu #invoiceNumberMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <input
+          type="search"
+          placeholder="查询发票号码"
+          [value]="invoiceNumberQuery"
+          (input)="setTextFilter('invoiceNumberQuery', eventValue($event))"
+        />
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="setTextFilter('invoiceNumberQuery', '')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+
+    <nz-dropdown-menu #sellerMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <input
+          type="search"
+          placeholder="模糊搜索销售方"
+          [value]="sellerQuery"
+          (input)="setTextFilter('sellerQuery', eventValue($event))"
+        />
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="setTextFilter('sellerQuery', '')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+
+    <nz-dropdown-menu #taxItemsMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <input
+          type="search"
+          placeholder="模糊搜索税目"
+          [value]="taxItemsQuery"
+          (input)="setTextFilter('taxItemsQuery', eventValue($event))"
+        />
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="setTextFilter('taxItemsQuery', '')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+
+    <nz-dropdown-menu #amountMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <div class="range-filter">
+          <input
+            type="number"
+            placeholder="最小金额"
+            [value]="amountRange.min"
+            (input)="setNumericRange('amount', 'min', eventValue($event))"
+          />
+          <span>-</span>
+          <input
+            type="number"
+            placeholder="最大金额"
+            [value]="amountRange.max"
+            (input)="setNumericRange('amount', 'max', eventValue($event))"
+          />
+        </div>
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="clearNumericRange('amount')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+
+    <nz-dropdown-menu #taxAmountMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <div class="range-filter">
+          <input
+            type="number"
+            placeholder="最小税额"
+            [value]="taxAmountRange.min"
+            (input)="setNumericRange('tax_amount', 'min', eventValue($event))"
+          />
+          <span>-</span>
+          <input
+            type="number"
+            placeholder="最大税额"
+            [value]="taxAmountRange.max"
+            (input)="setNumericRange('tax_amount', 'max', eventValue($event))"
+          />
+        </div>
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="clearNumericRange('tax_amount')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+
+    <nz-dropdown-menu #taxRateMenu="nzDropdownMenu">
+      <div class="filter-menu" (click)="$event.stopPropagation()">
+        <div class="range-filter">
+          <input
+            class="tax-rate-number-input"
+            type="number"
+            placeholder="最小税率%"
+            [value]="taxRateRange.min"
+            (input)="setNumericRange('tax_rate', 'min', eventValue($event))"
+          />
+          <span>-</span>
+          <input
+            class="tax-rate-number-input"
+            type="number"
+            placeholder="最大税率%"
+            [value]="taxRateRange.max"
+            (input)="setNumericRange('tax_rate', 'max', eventValue($event))"
+          />
+        </div>
+        <button
+          nz-button
+          nzSize="small"
+          type="button"
+          (click)="clearNumericRange('tax_rate')"
+        >
+          重置
+        </button>
+      </div>
+    </nz-dropdown-menu>
+  </nz-watermark>
+</main>

@@ -1,0 +1,79 @@
+<aside class="preview-panel" [style.width.px]="width">
+  <nz-card [nzTitle]="preview.meta" [nzBodyStyle]="{ padding: '12px' }">
+    <div
+      class="preview-img-wrap"
+      [class.preview-img-wrap--clickable]="hasPreviewImage"
+      [attr.role]="hasPreviewImage ? 'button' : null"
+      [attr.tabindex]="hasPreviewImage ? 0 : null"
+      [attr.aria-label]="hasPreviewImage ? '放大发票预览' : null"
+      (click)="openPreviewModal()"
+      (keydown.enter)="openPreviewModal()"
+      (keydown.space)="openPreviewModal()"
+    >
+      @if (preview.loading) {
+      <div class="preview-loading">预览加载中...</div>
+      } @if (hasPreviewImage) {
+      <img [src]="preview.imageSrc" alt="发票预览" />
+      } @if (!hasPreviewImage && !preview.loading) {
+      <nz-empty [nzNotFoundContent]="preview.placeholder"></nz-empty>
+      }
+    </div>
+    @if (preview.pageTotal > 1) {
+    <div class="preview-nav">
+      <button
+        nz-button
+        nzSize="small"
+        nzShape="round"
+        [disabled]="extracting || preview.page <= 0"
+        (click)="previousPage.emit()"
+      >
+        <nz-icon nzType="caret-left" nzTheme="outline" />
+        上一页
+      </button>
+      <span
+        class="preview-page-indicator"
+        nz-tooltip
+        [nzTooltipTitle]="
+          '第 ' + (preview.page + 1) + ' / ' + preview.pageTotal + ' 页'
+        "
+        nzTooltipPlacement="top"
+      >
+        {{ preview.page + 1 }} / {{ preview.pageTotal }}
+      </span>
+      <button
+        nz-button
+        nzSize="small"
+        nzShape="round"
+        [disabled]="extracting || preview.page + 1 >= preview.pageTotal"
+        (click)="nextPage.emit()"
+      >
+        下一页
+        <nz-icon nzType="caret-right" nzTheme="outline" />
+      </button>
+    </div>
+    }
+  </nz-card>
+</aside>
+
+@if (isPreviewModalOpen && hasPreviewImage) {
+<div
+  class="preview-modal-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-label="发票预览放大图"
+  (click)="closePreviewModal()"
+>
+  <div class="preview-modal-content">
+    <img [src]="preview.imageSrc" alt="发票预览放大图" />
+  </div>
+</div>
+}
+
+<div
+  class="split-handle"
+  role="separator"
+  aria-orientation="vertical"
+  aria-label="调整预览区宽度"
+  tabindex="0"
+  (pointerdown)="startResize.emit($event)"
+></div>

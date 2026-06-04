@@ -1,0 +1,140 @@
+:host {
+  display: contents;
+}
+
+.preview-panel {
+  flex: 0 0 auto;
+  min-width: 280px;
+  max-width: 85vw;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.preview-panel nz-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: none;
+}
+
+:host ::ng-deep .preview-panel .ant-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+:host ::ng-deep .preview-panel .ant-card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .preview-panel .ant-card-head-title {
+  color: #6b7280;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.preview-img-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: #fafafa;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+}
+
+.preview-img-wrap--clickable {
+  cursor: zoom-in;
+}
+
+.preview-img-wrap--clickable:focus-visible {
+  outline: 2px solid #1677ff;
+  outline-offset: 2px;
+}
+
+.preview-img-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.preview-loading {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.preview-nav {
+  flex: 0 0 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.preview-page-indicator {
+  color: #6b7280;
+  font-size: 12px;
+  cursor: help;
+}
+
+.split-handle {
+  flex: 0 0 12px;
+  width: 12px;
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.split-handle::before {
+  content: "";
+  position: absolute;
+  inset: 0 4px;
+  background: #d9dfe7;
+  transition: background 0.15s ease;
+}
+
+.split-handle:hover::before,
+.split-handle:focus-visible::before,
+:host-context(body.resizing) .split-handle::before {
+  background: #1677ff;
+}
+
+.preview-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(15 23 42 / 70%);
+  cursor: zoom-out;
+}
+
+.preview-modal-content {
+  width: 80vw;
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(15 23 42 / 35%);
+}
+
+.preview-modal-content img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}

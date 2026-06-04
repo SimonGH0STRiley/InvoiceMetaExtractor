@@ -1,0 +1,72 @@
+<header class="toolbar">
+  <div class="brand-actions">
+    <h1>小宝的发票工作台</h1>
+  </div>
+  <div class="actions">
+    <button
+      nz-button
+      nzType="primary"
+      nzShape="round"
+      [nzLoading]="extracting"
+      (click)="selectFiles.emit()"
+    >
+      导入
+      <nz-icon nzType="import" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting || !hasRecords"
+      (click)="dedupeRecords.emit()"
+    >
+      去重
+      <nz-icon nzType="security-scan" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting || !hasRecords"
+      (click)="miroSummary.emit()"
+    >
+      MIRO
+      <nz-icon nzType="fund" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting"
+      (click)="oaConfig.emit()"
+    >
+      OA配置
+      <nz-icon nzType="setting" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting || !hasRecords"
+      (click)="oaPayment.emit()"
+    >
+      OA付款
+      <nz-icon nzType="transaction" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting || !hasRecords"
+      (click)="exportExcel.emit()"
+    >
+      导出
+      <nz-icon nzType="export" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      nzDanger
+      [disabled]="extracting"
+      (click)="clearAll.emit()"
+    >
+      清空表格
+      <nz-icon nzType="clear" nzTheme="outline" />
+    </button>
+  </div>
+</header>

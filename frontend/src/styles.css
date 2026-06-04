@@ -1,0 +1,39 @@
+@import "ng-zorro-antd/ng-zorro-antd.min.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.resizing * {
+  cursor: col-resize !important;
+}
+
+.ant-tooltip-inner {
+  min-height: 24px;
+  padding: 4px 8px;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  background-color: #2db7f5;
+}
+
+.ant-tooltip-arrow::before {
+  background-color: #2db7f5;
+}

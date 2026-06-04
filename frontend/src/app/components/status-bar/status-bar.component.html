@@ -1,0 +1,26 @@
+<footer class="status-bar">
+  <nz-progress
+    class="progress"
+    [nzPercent]="progressPercent"
+    [nzShowInfo]="false"
+    nzSize="small"
+  ></nz-progress>
+  <span
+    class="status-icon"
+    [class.status-ready]="statusColorClass === 'status-ready'"
+    [class.status-success]="statusColorClass === 'status-success'"
+    [class.status-error]="statusColorClass === 'status-error'"
+  >
+    <nz-icon
+      [nzType]="statusIcon"
+      nzTheme="outline"
+      [nzSpin]="statusSpinning"
+    />
+  </span>
+  <span class="status-text">
+    {{ statusText }}
+  </span>
+  <span class="stats">
+    {{ statsText }}
+  </span>
+</footer>

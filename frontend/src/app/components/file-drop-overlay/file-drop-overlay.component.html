@@ -1,0 +1,14 @@
+<div class="drop-overlay" [class.active]="active">
+  <div class="drop-card" [class.loading]="extracting">
+    <strong>{{
+      extracting ? "正在解析发票中" : "松开鼠标开始解析发票"
+    }}</strong>
+    <span>
+      {{
+        extracting
+          ? "请等待当前任务完成"
+          : "支持 PDF、JPG、PNG、BMP、WEBP、TIFF 等发票文件"
+      }}
+    </span>
+  </div>
+</div>
