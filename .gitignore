@@ -9,6 +9,7 @@ node_modules/
 tests/
 uploads/
 .angular/
+.cursor/
 coverage/
 npm-debug.log*
 yarn-debug.log*
