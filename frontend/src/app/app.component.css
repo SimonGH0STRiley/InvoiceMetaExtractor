@@ -8,6 +8,20 @@
   color: #1f2933;
 }
 
+.app-watermark {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+::ng-deep .app-watermark .ant-watermark {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
 .workspace {
   flex: 1 1 auto;
   display: flex;
@@ -194,4 +208,55 @@
 .oa-config-empty {
   color: #8c8c8c;
   text-align: center;
+}
+
+.ocr-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ocr-settings-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ocr-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.ocr-radio-option {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.ocr-radio-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.ocr-radio-dpi {
+  color: #1677ff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ocr-radio-description {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 12px;
 }

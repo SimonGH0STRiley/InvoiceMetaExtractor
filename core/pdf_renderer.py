@@ -11,7 +11,7 @@ from PIL import Image
 from core.models import PageImage
 
 
-def render_pdf_pages(path: Path, *, dpi: int = 200) -> list[PageImage]:
+def render_pdf_pages(path: Path, *, dpi: int = 150) -> list[PageImage]:
     """Render all PDF pages to RGB PageImage list."""
     pages: list[PageImage] = []
     zoom = dpi / 72.0

@@ -17,6 +17,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.staticfiles import StaticFiles
 
 from api.schemas import (
+    AppConfigResponse,
     DedupeRecordsResponse,
     ExportRequest,
     ExportResponse,
@@ -49,6 +50,7 @@ WEB_DIR = _resource_root() / "web"
 DEFAULT_EXPORT_DIR = Path.home() / "Documents" / "InvoiceMetaExtractor"
 UPLOAD_DIR = DEFAULT_EXPORT_DIR / "uploads"
 OA_CONFIG_PATH = DEFAULT_EXPORT_DIR / "config" / "oa_config.json"
+APP_CONFIG_PATH = DEFAULT_EXPORT_DIR / "config" / "app_config.json"
 
 app = FastAPI(title="InvoiceMetaExtractor", version="0.1.0")
 
@@ -67,6 +69,7 @@ def _record_to_dto(record: InvoiceRecord) -> InvoiceRecordDto:
         invoice_type=record.invoice_type,
         invoice_number=record.invoice_number,
         issue_date=record.issue_date,
+        buyer_name=record.buyer_name,
         seller_name=record.seller_name,
         tax_items=record.tax_items,
         quantity=record.quantity,
@@ -222,6 +225,37 @@ def _save_oa_configs_to_disk(configs: list[OaConfigDto]) -> None:
     temp_path.replace(OA_CONFIG_PATH)
 
 
+def _normalize_ocr_dpi(value: object) -> int:
+    try:
+        dpi = int(value)
+    except (TypeError, ValueError):
+        return 150
+    return dpi if dpi in {100, 150, 200} else 150
+
+
+def _load_app_config_from_disk() -> AppConfigResponse:
+    if not APP_CONFIG_PATH.is_file():
+        return AppConfigResponse()
+    try:
+        data = json.loads(APP_CONFIG_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return AppConfigResponse()
+        return AppConfigResponse(ocr_dpi=_normalize_ocr_dpi(data.get("ocr_dpi")))
+    except Exception:
+        return AppConfigResponse()
+
+
+def _save_app_config_to_disk(config: AppConfigResponse) -> None:
+    APP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "ocr_dpi": _normalize_ocr_dpi(config.ocr_dpi),
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
+    }
+    temp_path = APP_CONFIG_PATH.with_suffix(".tmp")
+    temp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp_path.replace(APP_CONFIG_PATH)
+
+
 def _start_extract_paths(
     paths: list[Path],
     *,
@@ -349,6 +383,18 @@ def save_oa_config(req: OaConfigResponse) -> OaConfigResponse:
     return OaConfigResponse(configs=configs)
 
 
+@app.get("/api/app-config", response_model=AppConfigResponse)
+def get_app_config() -> AppConfigResponse:
+    return _load_app_config_from_disk()
+
+
+@app.post("/api/app-config", response_model=AppConfigResponse)
+def save_app_config(req: AppConfigResponse) -> AppConfigResponse:
+    config = AppConfigResponse(ocr_dpi=_normalize_ocr_dpi(req.ocr_dpi))
+    _save_app_config_to_disk(config)
+    return _load_app_config_from_disk()
+
+
 @app.post("/api/extract", response_model=ExtractStartResponse)
 def start_extract(req: ExtractRequest) -> ExtractStartResponse:
     if not req.paths:
@@ -364,7 +410,7 @@ def start_extract(req: ExtractRequest) -> ExtractStartResponse:
 @app.post("/api/extract/upload", response_model=ExtractStartResponse)
 async def start_extract_upload(
     files: List[UploadFile] = File(...),
-    dpi: int = Query(200, ge=72, le=300),
+    dpi: int = Query(150, ge=72, le=300),
 ) -> ExtractStartResponse:
     if not files:
         raise HTTPException(status_code=400, detail="未提供文件")
@@ -464,6 +510,7 @@ def update_record(req: UpdateRecordRequest) -> InvoiceRecordDto:
                     invoice_type=req.record.invoice_type,
                     invoice_number=req.record.invoice_number,
                     issue_date=req.record.issue_date,
+                    buyer_name=req.record.buyer_name,
                     seller_name=req.record.seller_name,
                     tax_items=req.record.tax_items,
                     quantity=req.record.quantity,

@@ -74,6 +74,7 @@ class InvoiceRecord:
     invoice_type: str = ""
     invoice_number: str = ""
     issue_date: str = ""
+    buyer_name: str = ""
     seller_name: str = ""
     tax_items: str = ""  # 税目/项目名称，多项以；分隔
     quantity: str = ""

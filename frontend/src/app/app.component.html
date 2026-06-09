@@ -1,600 +1,847 @@
-<app-toolbar
-  [extracting]="extracting"
-  [hasRecords]="records.length > 0"
-  (miroSummary)="openMiroSummary()"
-  (oaConfig)="openOaConfig()"
-  (oaPayment)="openOaPayment()"
-  (selectFiles)="selectFiles()"
-  (dedupeRecords)="dedupeRecords()"
-  (exportExcel)="exportExcel()"
-  (clearAll)="clearAll()"
-></app-toolbar>
+<nz-watermark
+	class="app-watermark"
+  [nzZIndex]="10000"
+	[nzContent]="watermarkContent"
+	[nzGap]="[100, 150]"
+>
+	<app-toolbar
+		[extracting]="extracting"
+		[hasRecords]="records.length > 0"
+		(miroSummary)="openMiroSummary()"
+		(oaPayment)="openOaPayment()"
+		(settings)="openSettings()"
+		(selectFiles)="selectFiles()"
+		(dedupeRecords)="dedupeRecords()"
+		(exportExcel)="exportExcel()"
+		(clearAll)="clearAll()"
+	></app-toolbar>
 
-<div #workspace class="workspace">
-  <app-preview-panel
-    [preview]="preview"
-    [width]="previewWidth"
-    [extracting]="extracting"
-    (previousPage)="prevPreviewPage()"
-    (nextPage)="nextPreviewPage()"
-    (startResize)="startResize($event)"
-  ></app-preview-panel>
+	<div
+		#workspace
+		class="workspace"
+	>
+		<app-preview-panel
+			[preview]="preview"
+			[width]="previewWidth"
+			[extracting]="extracting"
+			(previousPage)="prevPreviewPage()"
+			(nextPage)="nextPreviewPage()"
+			(startResize)="startResize($event)"
+		></app-preview-panel>
 
-  <app-results-table
-    [records]="records"
-    [extracting]="extracting"
-    [selectedSource]="selectedSource"
-    [selectedPage]="selectedPage"
-    [selectionStatus]="selectionStatus"
-    (rowSelected)="selectRow($event)"
-    (cellCopied)="copyText($event)"
-    (recordsReordered)="reorderRecords($event)"
-    (recordUpdated)="updateRecord($event)"
-    (recordRemoved)="removeRecord($event)"
-  ></app-results-table>
-</div>
+		<app-results-table
+			[records]="records"
+			[extracting]="extracting"
+			[selectedSource]="selectedSource"
+			[selectedPage]="selectedPage"
+			[selectionStatus]="selectionStatus"
+			(rowSelected)="selectRow($event)"
+			(cellCopied)="copyText($event)"
+			(recordsReordered)="reorderRecords($event)"
+			(recordUpdated)="updateRecord($event)"
+			(recordRemoved)="removeRecord($event)"
+		></app-results-table>
+	</div>
 
-<app-status-bar
-  [progressPercent]="progressPercent"
-  [statusText]="statusText"
-  [statsText]="statsText"
-  [extracting]="extracting"
-></app-status-bar>
+	<app-status-bar
+		[progressPercent]="progressPercent"
+		[statusText]="statusText"
+		[statsText]="statsText"
+		[extracting]="extracting"
+	></app-status-bar>
+</nz-watermark>
 
 <nz-drawer
-  [nzVisible]="miroModalOpen"
-  nzTitle="MIRO 税率汇总"
-  nzPlacement="right"
-  nzWidth="80vw"
-  [nzExtra]="miroDrawerExtra"
-  [nzMaskClosable]="false"
-  (nzOnClose)="closeMiroSummary()"
+	[nzVisible]="miroModalOpen"
+	nzTitle="MIRO 税率汇总"
+	nzPlacement="right"
+	nzWidth="80vw"
+	[nzExtra]="miroDrawerExtra"
+	[nzMaskClosable]="false"
+	(nzOnClose)="closeMiroSummary()"
 >
-  <ng-container *nzDrawerContent>
-    <nz-table
-      class="miro-summary-table"
-      nzSize="small"
-      nzBordered
-      nzTableLayout="fixed"
-      [nzData]="displayedMiroSummaryRows"
-      [nzShowPagination]="false"
-      [nzScroll]="{ y: 'calc(100vh - 220px)' }"
-    >
-      <thead>
-        <tr>
-          <th
-            nzWidth="140px"
-            [nzSortFn]="true"
-            [nzSortDirections]="miroSortDirections"
-            [nzSortOrder]="miroTaxRateSortOrder"
-            (nzSortOrderChange)="setMiroTaxRateSortOrder($event)"
-          >
-            税率
-          </th>
-          <th>金额</th>
-          <th>税额</th>
-          <th>价税合计</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of displayedMiroSummaryRows; track row.taxRate) {
-        <tr>
-          <td>{{ row.taxRate }}</td>
-          <td class="number-cell">{{ formatMiroAmount(row.amount) }}</td>
-          <td class="number-cell">{{ formatMiroAmount(row.taxAmount) }}</td>
-          <td class="number-cell">{{ formatMiroAmount(row.total) }}</td>
-        </tr>
-        }
-      </tbody>
-      <tfoot>
-        <tr class="miro-summary-total-row">
-          <th>总计</th>
-          <th class="number-cell">{{ formatMiroAmount(miroSummaryTotal.amount) }}</th>
-          <th class="number-cell">
-            {{ formatMiroAmount(miroSummaryTotal.taxAmount) }}
-          </th>
-          <th class="number-cell">{{ formatMiroAmount(miroSummaryTotal.total) }}</th>
-        </tr>
-      </tfoot>
-    </nz-table>
-  </ng-container>
+	<ng-container *nzDrawerContent>
+		<nz-table
+			class="miro-summary-table"
+			nzSize="small"
+			nzBordered
+			nzTableLayout="fixed"
+			[nzData]="displayedMiroSummaryRows"
+			[nzShowPagination]="false"
+			[nzScroll]="{ y: 'calc(100vh - 220px)' }"
+		>
+			<thead>
+				<tr>
+					<th
+						nzWidth="140px"
+						[nzSortFn]="true"
+						[nzSortDirections]="miroSortDirections"
+						[nzSortOrder]="miroTaxRateSortOrder"
+						(nzSortOrderChange)="setMiroTaxRateSortOrder($event)"
+					>
+						税率
+					</th>
+					<th>金额</th>
+					<th>税额</th>
+					<th>价税合计</th>
+				</tr>
+			</thead>
+			<tbody>
+				@for (row of displayedMiroSummaryRows; track row.taxRate) {
+				<tr>
+					<td>{{ row.taxRate }}</td>
+					<td class="number-cell">
+						{{ formatMiroAmount(row.amount) }}
+					</td>
+					<td class="number-cell">
+						{{ formatMiroAmount(row.taxAmount) }}
+					</td>
+					<td class="number-cell">
+						{{ formatMiroAmount(row.total) }}
+					</td>
+				</tr>
+				}
+			</tbody>
+			<tfoot>
+				<tr class="miro-summary-total-row">
+					<th>总计</th>
+					<th class="number-cell">
+						{{ formatMiroAmount(miroSummaryTotal.amount) }}
+					</th>
+					<th class="number-cell">
+						{{ formatMiroAmount(miroSummaryTotal.taxAmount) }}
+					</th>
+					<th class="number-cell">
+						{{ formatMiroAmount(miroSummaryTotal.total) }}
+					</th>
+				</tr>
+			</tfoot>
+		</nz-table>
+	</ng-container>
 </nz-drawer>
 
 <ng-template #miroDrawerExtra>
-  <button
-    nz-button
-    nzShape="round"
-    type="button"
-    [disabled]="!miroSummaryRows.length"
-    (click)="exportMiroDrawerExcel()"
-  >
-    导出
-    <nz-icon nzType="export" nzTheme="outline" />
-  </button>
+	<button
+		nz-button
+		nzShape="round"
+		type="button"
+		[disabled]="!miroSummaryRows.length"
+		(click)="exportMiroDrawerExcel()"
+	>
+		导出
+		<nz-icon
+			nzType="export"
+			nzTheme="outline"
+		/>
+	</button>
 </ng-template>
 
 <nz-drawer
-  [nzVisible]="oaPaymentDrawerOpen"
-  nzTitle="OA付款"
-  nzPlacement="right"
-  nzWidth="80vw"
-  [nzExtra]="oaPaymentDrawerExtra"
-  (nzOnClose)="closeOaPayment()"
+	[nzVisible]="oaPaymentDrawerOpen"
+	nzTitle="OA付款"
+	nzPlacement="right"
+	nzWidth="80vw"
+	[nzExtra]="oaPaymentDrawerExtra"
+	(nzOnClose)="closeOaPayment()"
 >
-  <ng-container *nzDrawerContent>
-    <div class="oa-payment-meta">
-      <span>{{ oaPaymentSummaryText }}</span>
-      @if (!oaPaymentConfigs.length) {
-      <span>暂无 OA 报销项目配置，请先在“OA配置”中新增。</span>
-      }
-    </div>
+	<ng-container *nzDrawerContent>
+		<div class="oa-payment-meta">
+			<span>{{ oaPaymentSummaryText }}</span>
+			@if (!oaPaymentConfigs.length) {
+			<span>暂无 OA 报销项目配置，请先在“设置”中新增。</span>
+			}
+		</div>
 
-    <nz-table
-      class="oa-payment-table"
-      nzSize="small"
-      nzBordered
-      nzTableLayout="fixed"
-      [nzData]="displayedOaPaymentRecords"
-      [nzShowPagination]="false"
-      [nzScroll]="{ x: '1280px', y: 'calc(100vh - 220px)' }"
-    >
-      <thead>
-        <tr>
-          <th
-            nzWidth="100px"
-            [nzFilters]="invoiceTypeFilters"
-            [nzFilterMultiple]="false"
-            [nzFilterFn]="true"
-            (nzFilterChange)="setOaPaymentInvoiceTypeFilterFromNz($event)"
-          >
-            发票类型
-          </th>
-          <th nzWidth="180px" nzCustomFilter>
-            发票号码
-            <nz-filter-trigger
-              [nzActive]="oaPaymentInvoiceNumberQuery.trim().length > 0"
-              [nzDropdownMenu]="oaPaymentInvoiceNumberMenu"
-            >
-              <nz-icon nzType="search" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th
-            nzWidth="120px"
-            [nzSortFn]="true"
-            [nzSortDirections]="sortDirections"
-            [nzSortOrder]="oaPaymentSortOrderFor('issue_date')"
-            (nzSortOrderChange)="setOaPaymentSortOrder('issue_date', $event)"
-          >
-            开票日期
-          </th>
-          <th nzWidth="150px" nzBreakWord nzCustomFilter>
-            销售方
-            <nz-filter-trigger
-              [nzActive]="oaPaymentSellerQuery.trim().length > 0"
-              [nzDropdownMenu]="oaPaymentSellerMenu"
-            >
-              <nz-icon nzType="search" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th nzWidth="150px" nzBreakWord nzCustomFilter>
-            税目
-            <nz-filter-trigger
-              [nzActive]="oaPaymentTaxItemsQuery.trim().length > 0"
-              [nzDropdownMenu]="oaPaymentTaxItemsMenu"
-            >
-              <nz-icon nzType="search" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th nzWidth="70px">数量</th>
-          <th
-            nzWidth="120px"
-            nzCustomFilter
-            [nzSortFn]="true"
-            [nzSortDirections]="sortDirections"
-            [nzSortOrder]="oaPaymentSortOrderFor('amount')"
-            (nzSortOrderChange)="setOaPaymentSortOrder('amount', $event)"
-          >
-            金额
-            <nz-filter-trigger
-              [nzActive]="
-                !!(oaPaymentAmountRange.min || oaPaymentAmountRange.max)
-              "
-              [nzDropdownMenu]="oaPaymentAmountMenu"
-            >
-              <nz-icon nzType="filter" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th
-            nzWidth="120px"
-            nzCustomFilter
-            [nzSortFn]="true"
-            [nzSortDirections]="sortDirections"
-            [nzSortOrder]="oaPaymentSortOrderFor('tax_amount')"
-            (nzSortOrderChange)="setOaPaymentSortOrder('tax_amount', $event)"
-          >
-            税额
-            <nz-filter-trigger
-              [nzActive]="
-                !!(oaPaymentTaxAmountRange.min || oaPaymentTaxAmountRange.max)
-              "
-              [nzDropdownMenu]="oaPaymentTaxAmountMenu"
-            >
-              <nz-icon nzType="filter" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th
-            nzWidth="90px"
-            nzCustomFilter
-            [nzSortFn]="true"
-            [nzSortDirections]="sortDirections"
-            [nzSortOrder]="oaPaymentSortOrderFor('tax_rate')"
-            (nzSortOrderChange)="setOaPaymentSortOrder('tax_rate', $event)"
-          >
-            税率
-            <nz-filter-trigger
-              [nzActive]="
-                !!(oaPaymentTaxRateRange.min || oaPaymentTaxRateRange.max)
-              "
-              [nzDropdownMenu]="oaPaymentTaxRateMenu"
-            >
-              <nz-icon nzType="filter" nzTheme="outline" />
-            </nz-filter-trigger>
-          </th>
-          <th nzWidth="180px">OA报销项目</th>
-        </tr>
-      </thead>
-      <tbody
-        cdkDropList
-        [cdkDropListData]="displayedOaPaymentRecords"
-        (cdkDropListDropped)="dropOaPaymentRecord($event)"
-      >
-        @for (record of displayedOaPaymentRecords; track
-        trackOaPaymentRow($index, record)) {
-        <tr cdkDrag>
-          <td>{{ record.invoice_type }}</td>
-          <td>{{ record.invoice_number }}</td>
-          <td>{{ record.issue_date | date : "yyyy年M月d日" }}</td>
-          <td>
-            <span class="drawer-cell-ellipsis">{{ record.seller_name }}</span>
-          </td>
-          <td>
-            <span class="drawer-cell-ellipsis">{{ record.tax_items }}</span>
-          </td>
-          <td>{{ record.quantity }}</td>
-          <td class="number-cell">{{ formatNumber(record.amount) }}</td>
-          <td class="number-cell">{{ formatNumber(record.tax_amount) }}</td>
-          <td>{{ record.tax_rate }}</td>
-          <td>
-            <nz-select
-              class="oa-payment-project-select"
-              nzAllowClear
-              nzPlaceHolder="选择报销项目"
-              [disabled]="!oaPaymentConfigs.length"
-              [ngModel]="oaPaymentProjectValue(record)"
-              (mousedown)="$event.stopPropagation()"
-              (click)="$event.stopPropagation()"
-              (ngModelChange)="updateOaPaymentProject(record, $event)"
-            >
-              @for (config of oaPaymentConfigs; track
-              trackOaPaymentConfig($index, config)) {
-              <nz-option
-                [nzValue]="config.id"
-                [nzLabel]="oaConfigOptionLabel(config)"
-              ></nz-option>
-              }
-            </nz-select>
-          </td>
-        </tr>
-        }
-      </tbody>
-    </nz-table>
+		<nz-table
+			class="oa-payment-table"
+			nzSize="small"
+			nzBordered
+			nzTableLayout="fixed"
+			[nzData]="displayedOaPaymentRecords"
+			[nzShowPagination]="false"
+			[nzScroll]="{ x: '1280px', y: 'calc(100vh - 220px)' }"
+		>
+			<thead>
+				<tr>
+					<th
+						nzWidth="100px"
+						[nzFilters]="invoiceTypeFilters"
+						[nzFilterMultiple]="false"
+						[nzFilterFn]="true"
+						(nzFilterChange)="
+							setOaPaymentInvoiceTypeFilterFromNz($event)
+						"
+					>
+						发票类型
+					</th>
+					<th
+						nzWidth="180px"
+						nzCustomFilter
+					>
+						发票号码
+						<nz-filter-trigger
+							[nzActive]="
+								oaPaymentInvoiceNumberQuery.trim().length > 0
+							"
+							[nzDropdownMenu]="oaPaymentInvoiceNumberMenu"
+						>
+							<nz-icon
+								nzType="search"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th
+						nzWidth="120px"
+						[nzSortFn]="true"
+						[nzSortDirections]="sortDirections"
+						[nzSortOrder]="oaPaymentSortOrderFor('issue_date')"
+						(nzSortOrderChange)="
+							setOaPaymentSortOrder('issue_date', $event)
+						"
+					>
+						开票日期
+					</th>
+					<th
+						nzWidth="150px"
+						nzBreakWord
+						nzCustomFilter
+					>
+						销售方
+						<nz-filter-trigger
+							[nzActive]="oaPaymentSellerQuery.trim().length > 0"
+							[nzDropdownMenu]="oaPaymentSellerMenu"
+						>
+							<nz-icon
+								nzType="search"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th
+						nzWidth="150px"
+						nzBreakWord
+						nzCustomFilter
+					>
+						税目
+						<nz-filter-trigger
+							[nzActive]="
+								oaPaymentTaxItemsQuery.trim().length > 0
+							"
+							[nzDropdownMenu]="oaPaymentTaxItemsMenu"
+						>
+							<nz-icon
+								nzType="search"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th nzWidth="70px">数量</th>
+					<th
+						nzWidth="120px"
+						nzCustomFilter
+						[nzSortFn]="true"
+						[nzSortDirections]="sortDirections"
+						[nzSortOrder]="oaPaymentSortOrderFor('amount')"
+						(nzSortOrderChange)="
+							setOaPaymentSortOrder('amount', $event)
+						"
+					>
+						金额
+						<nz-filter-trigger
+							[nzActive]="
+								!!(
+									oaPaymentAmountRange.min ||
+									oaPaymentAmountRange.max
+								)
+							"
+							[nzDropdownMenu]="oaPaymentAmountMenu"
+						>
+							<nz-icon
+								nzType="filter"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th
+						nzWidth="120px"
+						nzCustomFilter
+						[nzSortFn]="true"
+						[nzSortDirections]="sortDirections"
+						[nzSortOrder]="oaPaymentSortOrderFor('tax_amount')"
+						(nzSortOrderChange)="
+							setOaPaymentSortOrder('tax_amount', $event)
+						"
+					>
+						税额
+						<nz-filter-trigger
+							[nzActive]="
+								!!(
+									oaPaymentTaxAmountRange.min ||
+									oaPaymentTaxAmountRange.max
+								)
+							"
+							[nzDropdownMenu]="oaPaymentTaxAmountMenu"
+						>
+							<nz-icon
+								nzType="filter"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th
+						nzWidth="90px"
+						nzCustomFilter
+						[nzSortFn]="true"
+						[nzSortDirections]="sortDirections"
+						[nzSortOrder]="oaPaymentSortOrderFor('tax_rate')"
+						(nzSortOrderChange)="
+							setOaPaymentSortOrder('tax_rate', $event)
+						"
+					>
+						税率
+						<nz-filter-trigger
+							[nzActive]="
+								!!(
+									oaPaymentTaxRateRange.min ||
+									oaPaymentTaxRateRange.max
+								)
+							"
+							[nzDropdownMenu]="oaPaymentTaxRateMenu"
+						>
+							<nz-icon
+								nzType="filter"
+								nzTheme="outline"
+							/>
+						</nz-filter-trigger>
+					</th>
+					<th nzWidth="180px">OA报销项目</th>
+				</tr>
+			</thead>
+			<tbody
+				cdkDropList
+				[cdkDropListData]="displayedOaPaymentRecords"
+				(cdkDropListDropped)="dropOaPaymentRecord($event)"
+			>
+				@for (record of displayedOaPaymentRecords; track
+				trackOaPaymentRow($index, record)) {
+				<tr cdkDrag>
+					<td>{{ record.invoice_type }}</td>
+					<td>{{ record.invoice_number }}</td>
+					<td>{{ record.issue_date | date : "yyyy年M月d日" }}</td>
+					<td>
+						<span class="drawer-cell-ellipsis">
+							{{ record.seller_name }}
+						</span>
+					</td>
+					<td>
+						<span class="drawer-cell-ellipsis">
+							{{ record.tax_items }}
+						</span>
+					</td>
+					<td>{{ record.quantity }}</td>
+					<td class="number-cell">
+						{{ formatNumber(record.amount) }}
+					</td>
+					<td class="number-cell">
+						{{ formatNumber(record.tax_amount) }}
+					</td>
+					<td>{{ record.tax_rate }}</td>
+					<td>
+						<nz-select
+							class="oa-payment-project-select"
+							nzAllowClear
+							nzPlaceHolder="选择报销项目"
+							[disabled]="!oaPaymentConfigs.length"
+							[ngModel]="oaPaymentProjectValue(record)"
+							(mousedown)="$event.stopPropagation()"
+							(click)="$event.stopPropagation()"
+							(ngModelChange)="
+								updateOaPaymentProject(record, $event)
+							"
+						>
+							@for (config of oaPaymentConfigs; track
+							trackOaPaymentConfig($index, config)) {
+							<nz-option
+								[nzValue]="config.id"
+								[nzLabel]="oaConfigOptionLabel(config)"
+							></nz-option>
+							}
+						</nz-select>
+					</td>
+				</tr>
+				}
+			</tbody>
+		</nz-table>
 
-    <nz-dropdown-menu #oaPaymentInvoiceNumberMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <input
-          type="search"
-          placeholder="查询发票号码"
-          [value]="oaPaymentInvoiceNumberQuery"
-          (input)="
-            setOaPaymentTextFilter(
-              'oaPaymentInvoiceNumberQuery',
-              eventValue($event)
-            )
-          "
-        />
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="setOaPaymentTextFilter('oaPaymentInvoiceNumberQuery', '')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
+		<nz-dropdown-menu #oaPaymentInvoiceNumberMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<input
+					type="search"
+					placeholder="查询发票号码"
+					[value]="oaPaymentInvoiceNumberQuery"
+					(input)="
+						setOaPaymentTextFilter(
+							'oaPaymentInvoiceNumberQuery',
+							eventValue($event)
+						)
+					"
+				/>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="
+						setOaPaymentTextFilter(
+							'oaPaymentInvoiceNumberQuery',
+							''
+						)
+					"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
 
-    <nz-dropdown-menu #oaPaymentSellerMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <input
-          type="search"
-          placeholder="模糊搜索销售方"
-          [value]="oaPaymentSellerQuery"
-          (input)="
-            setOaPaymentTextFilter('oaPaymentSellerQuery', eventValue($event))
-          "
-        />
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="setOaPaymentTextFilter('oaPaymentSellerQuery', '')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
+		<nz-dropdown-menu #oaPaymentSellerMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<input
+					type="search"
+					placeholder="模糊搜索销售方"
+					[value]="oaPaymentSellerQuery"
+					(input)="
+						setOaPaymentTextFilter(
+							'oaPaymentSellerQuery',
+							eventValue($event)
+						)
+					"
+				/>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="setOaPaymentTextFilter('oaPaymentSellerQuery', '')"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
 
-    <nz-dropdown-menu #oaPaymentTaxItemsMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <input
-          type="search"
-          placeholder="模糊搜索税目"
-          [value]="oaPaymentTaxItemsQuery"
-          (input)="
-            setOaPaymentTextFilter('oaPaymentTaxItemsQuery', eventValue($event))
-          "
-        />
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="setOaPaymentTextFilter('oaPaymentTaxItemsQuery', '')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
+		<nz-dropdown-menu #oaPaymentTaxItemsMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<input
+					type="search"
+					placeholder="模糊搜索税目"
+					[value]="oaPaymentTaxItemsQuery"
+					(input)="
+						setOaPaymentTextFilter(
+							'oaPaymentTaxItemsQuery',
+							eventValue($event)
+						)
+					"
+				/>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="
+						setOaPaymentTextFilter('oaPaymentTaxItemsQuery', '')
+					"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
 
-    <nz-dropdown-menu #oaPaymentAmountMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <div class="range-filter">
-          <input
-            type="number"
-            placeholder="最小金额"
-            [value]="oaPaymentAmountRange.min"
-            (input)="
-              setOaPaymentNumericRange('amount', 'min', eventValue($event))
-            "
-          />
-          <span>-</span>
-          <input
-            type="number"
-            placeholder="最大金额"
-            [value]="oaPaymentAmountRange.max"
-            (input)="
-              setOaPaymentNumericRange('amount', 'max', eventValue($event))
-            "
-          />
-        </div>
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="clearOaPaymentNumericRange('amount')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
+		<nz-dropdown-menu #oaPaymentAmountMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<div class="range-filter">
+					<input
+						type="number"
+						placeholder="最小金额"
+						[value]="oaPaymentAmountRange.min"
+						(input)="
+							setOaPaymentNumericRange(
+								'amount',
+								'min',
+								eventValue($event)
+							)
+						"
+					/>
+					<span>-</span>
+					<input
+						type="number"
+						placeholder="最大金额"
+						[value]="oaPaymentAmountRange.max"
+						(input)="
+							setOaPaymentNumericRange(
+								'amount',
+								'max',
+								eventValue($event)
+							)
+						"
+					/>
+				</div>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="clearOaPaymentNumericRange('amount')"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
 
-    <nz-dropdown-menu #oaPaymentTaxAmountMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <div class="range-filter">
-          <input
-            type="number"
-            placeholder="最小税额"
-            [value]="oaPaymentTaxAmountRange.min"
-            (input)="
-              setOaPaymentNumericRange('tax_amount', 'min', eventValue($event))
-            "
-          />
-          <span>-</span>
-          <input
-            type="number"
-            placeholder="最大税额"
-            [value]="oaPaymentTaxAmountRange.max"
-            (input)="
-              setOaPaymentNumericRange('tax_amount', 'max', eventValue($event))
-            "
-          />
-        </div>
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="clearOaPaymentNumericRange('tax_amount')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
+		<nz-dropdown-menu #oaPaymentTaxAmountMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<div class="range-filter">
+					<input
+						type="number"
+						placeholder="最小税额"
+						[value]="oaPaymentTaxAmountRange.min"
+						(input)="
+							setOaPaymentNumericRange(
+								'tax_amount',
+								'min',
+								eventValue($event)
+							)
+						"
+					/>
+					<span>-</span>
+					<input
+						type="number"
+						placeholder="最大税额"
+						[value]="oaPaymentTaxAmountRange.max"
+						(input)="
+							setOaPaymentNumericRange(
+								'tax_amount',
+								'max',
+								eventValue($event)
+							)
+						"
+					/>
+				</div>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="clearOaPaymentNumericRange('tax_amount')"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
 
-    <nz-dropdown-menu #oaPaymentTaxRateMenu="nzDropdownMenu">
-      <div class="filter-menu" (click)="$event.stopPropagation()">
-        <div class="range-filter">
-          <input
-            class="tax-rate-number-input"
-            type="number"
-            placeholder="最小税率%"
-            [value]="oaPaymentTaxRateRange.min"
-            (input)="
-              setOaPaymentNumericRange('tax_rate', 'min', eventValue($event))
-            "
-          />
-          <span>-</span>
-          <input
-            class="tax-rate-number-input"
-            type="number"
-            placeholder="最大税率%"
-            [value]="oaPaymentTaxRateRange.max"
-            (input)="
-              setOaPaymentNumericRange('tax_rate', 'max', eventValue($event))
-            "
-          />
-        </div>
-        <button
-          nz-button
-          nzSize="small"
-          type="button"
-          (click)="clearOaPaymentNumericRange('tax_rate')"
-        >
-          重置
-        </button>
-      </div>
-    </nz-dropdown-menu>
-  </ng-container>
+		<nz-dropdown-menu #oaPaymentTaxRateMenu="nzDropdownMenu">
+			<div
+				class="filter-menu"
+				(click)="$event.stopPropagation()"
+			>
+				<div class="range-filter">
+					<input
+						class="tax-rate-number-input"
+						type="number"
+						placeholder="最小税率%"
+						[value]="oaPaymentTaxRateRange.min"
+						(input)="
+							setOaPaymentNumericRange(
+								'tax_rate',
+								'min',
+								eventValue($event)
+							)
+						"
+					/>
+					<span>-</span>
+					<input
+						class="tax-rate-number-input"
+						type="number"
+						placeholder="最大税率%"
+						[value]="oaPaymentTaxRateRange.max"
+						(input)="
+							setOaPaymentNumericRange(
+								'tax_rate',
+								'max',
+								eventValue($event)
+							)
+						"
+					/>
+				</div>
+				<button
+					nz-button
+					nzSize="small"
+					type="button"
+					(click)="clearOaPaymentNumericRange('tax_rate')"
+				>
+					重置
+				</button>
+			</div>
+		</nz-dropdown-menu>
+	</ng-container>
 </nz-drawer>
 
 <ng-template #oaPaymentDrawerExtra>
-  <button
-    nz-button
-    nzShape="round"
-    type="button"
-    [disabled]="!displayedOaPaymentRecords.length"
-    (click)="exportOaPaymentDrawerExcel()"
-  >
-    导出
-    <nz-icon nzType="export" nzTheme="outline" />
-  </button>
+	<button
+		nz-button
+		nzShape="round"
+		type="button"
+		[disabled]="!displayedOaPaymentRecords.length"
+		(click)="exportOaPaymentDrawerExcel()"
+	>
+		导出
+		<nz-icon
+			nzType="export"
+			nzTheme="outline"
+		/>
+	</button>
 </ng-template>
 
 <nz-modal
-  [nzVisible]="oaConfigModalOpen"
-  nzTitle="OA 报销项目配置"
-  [nzFooter]="oaConfigFooter"
-  nzWidth="860px"
-  (nzOnCancel)="closeOaConfig()"
+	[nzVisible]="settingsModalOpen"
+	nzTitle="设置"
+	[nzFooter]="settingsFooter"
+	nzWidth="860px"
+	(nzOnCancel)="closeSettings()"
 >
-  <ng-container *nzModalContent>
-    <div class="oa-config-header">
-      <p>
-        配置用于 OA
-        报销项目匹配的名称、代码和正则表达式；名称不可重复，代码和正则可为空。
-      </p>
-      <button
-        nz-button
-        nzType="primary"
-        nzShape="round"
-        type="button"
-        (click)="addOaConfigRow()"
-      >
-        新增
-        <nz-icon nzType="plus-circle" nzTheme="outline" />
-      </button>
-    </div>
+	<ng-container *nzModalContent>
+		<nz-tabs
+			[(nzSelectedIndex)]="settingsTabIndex"
+			class="settings-tabs"
+		>
+			<nz-tab nzTitle="OCR 精度配置">
+				<div class="ocr-settings">
+					<p class="ocr-settings-hint">
+						选择 PDF 转图片后送入 OCR 的 PPI。PPI
+						越高越利于识别小字，但处理速度会更慢。
+					</p>
+					<nz-radio-group
+						class="ocr-radio-group"
+						[ngModel]="ocrDpi"
+						(ngModelChange)="setOcrDpi($event)"
+					>
+						@for (option of ocrPrecisionOptions; track option.dpi)
+						{
+						<label
+							nz-radio
+							[nzValue]="option.dpi"
+							class="ocr-radio-option"
+						>
+							<span class="ocr-radio-title">
+								{{ option.label }}
+								<nz-icon
+									[nzType]="option.icon"
+									nzTheme="outline"
+								/>
+								<span class="ocr-radio-dpi">
+									{{ option.dpi }} PPI
+								</span>
+							</span>
+							<span class="ocr-radio-description">
+								{{ option.description }}
+							</span>
+						</label>
+						}
+					</nz-radio-group>
+				</div>
+			</nz-tab>
 
-    <table class="oa-config-table">
-      <thead>
-        <tr>
-          <th>名称</th>
-          <th>代码</th>
-          <th>正则表达式</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of oaConfigDraft; track trackOaConfigRow($index, row)) {
-        <tr>
-          <td>
-            <input
-              nz-input
-              type="text"
-              placeholder="报销项目名称"
-              [class.oa-config-input-error]="row.nameError"
-              [ngModel]="row.name"
-              (ngModelChange)="updateOaConfigField(row.id, 'name', $event)"
-            />
-            @if (row.nameError) {
-            <div class="oa-config-error">
-              {{ row.nameError }}
-            </div>
-            }
-          </td>
-          <td>
-            <input
-              nz-input
-              type="text"
-              placeholder="报销项目代码"
-              [class.oa-config-input-error]="row.codeError"
-              [ngModel]="row.code"
-              (ngModelChange)="updateOaConfigField(row.id, 'code', $event)"
-            />
-            @if (row.codeError) {
-            <div class="oa-config-error">
-              {{ row.codeError }}
-            </div>
-            }
-          </td>
-          <td>
-            <input
-              nz-input
-              type="text"
-              placeholder="匹配税目的正则表达式"
-              [class.oa-config-input-error]="row.regexpError"
-              [ngModel]="row.regexp"
-              (ngModelChange)="updateOaConfigField(row.id, 'regexp', $event)"
-            />
-            @if (row.regexpError) {
-            <div class="oa-config-error">
-              {{ row.regexpError }}
-            </div>
-            }
-          </td>
-          <td>
-            <button
-              nz-button
-              nzShape="round"
-              nzDanger
-              type="button"
-              nz-popconfirm
-              nzPopconfirmTitle="删除这个 OA 报销项目配置？"
-              (nzOnConfirm)="removeOaConfigRow(row.id)"
-            >
-              删除
-              <nz-icon nzType="minus-circle" nzTheme="outline" />
-            </button>
-          </td>
-        </tr>
-        } @empty {
-        <tr>
-          <td class="oa-config-empty" colspan="4">
-            暂无配置，点击“新增项目”开始添加。
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
-  </ng-container>
+			<nz-tab nzTitle="OA 配置">
+				<div class="oa-config-header">
+					<p>
+						配置用于 OA
+						报销项目匹配的名称、代码和正则表达式；名称不可重复，代码和正则可为空。
+					</p>
+					<button
+						nz-button
+						nzType="primary"
+						nzShape="round"
+						type="button"
+						(click)="addOaConfigRow()"
+					>
+						新增
+						<nz-icon
+							nzType="plus-circle"
+							nzTheme="outline"
+						/>
+					</button>
+				</div>
+
+				<table class="oa-config-table">
+					<thead>
+						<tr>
+							<th>名称</th>
+							<th>代码</th>
+							<th>正则表达式</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (row of oaConfigDraft; track trackOaConfigRow($index, row)) {
+						<tr>
+							<td>
+								<input
+									nz-input
+									type="text"
+									placeholder="报销项目名称"
+									[class.oa-config-input-error]="
+										row.nameError
+									"
+									[ngModel]="row.name"
+									(ngModelChange)="
+										updateOaConfigField(
+											row.id,
+											'name',
+											$event
+										)
+									"
+								/>
+								@if (row.nameError) {
+								<div class="oa-config-error">
+									{{ row.nameError }}
+								</div>
+								}
+							</td>
+							<td>
+								<input
+									nz-input
+									type="text"
+									placeholder="报销项目代码"
+									[class.oa-config-input-error]="
+										row.codeError
+									"
+									[ngModel]="row.code"
+									(ngModelChange)="
+										updateOaConfigField(
+											row.id,
+											'code',
+											$event
+										)
+									"
+								/>
+								@if (row.codeError) {
+								<div class="oa-config-error">
+									{{ row.codeError }}
+								</div>
+								}
+							</td>
+							<td>
+								<input
+									nz-input
+									type="text"
+									placeholder="匹配税目的正则表达式"
+									[class.oa-config-input-error]="
+										row.regexpError
+									"
+									[ngModel]="row.regexp"
+									(ngModelChange)="
+										updateOaConfigField(
+											row.id,
+											'regexp',
+											$event
+										)
+									"
+								/>
+								@if (row.regexpError) {
+								<div class="oa-config-error">
+									{{ row.regexpError }}
+								</div>
+								}
+							</td>
+							<td>
+								<button
+									nz-button
+									nzShape="round"
+									nzDanger
+									type="button"
+									nz-popconfirm
+									nzPopconfirmTitle="删除这个 OA 报销项目配置？"
+									(nzOnConfirm)="removeOaConfigRow(row.id)"
+								>
+									删除
+									<nz-icon
+										nzType="minus-circle"
+										nzTheme="outline"
+									/>
+								</button>
+							</td>
+						</tr>
+						} @empty {
+						<tr>
+							<td
+								class="oa-config-empty"
+								colspan="4"
+							>
+								暂无配置，点击“新增项目”开始添加。
+							</td>
+						</tr>
+						}
+					</tbody>
+				</table>
+			</nz-tab>
+		</nz-tabs>
+	</ng-container>
 </nz-modal>
 
-<ng-template #oaConfigFooter>
-  <button nz-button nzShape="round" type="button" (click)="closeOaConfig()">
-    取消
-    <nz-icon nzType="close" nzTheme="outline" />
-  </button>
-  <button
-    nz-button
-    nzType="primary"
-    nzShape="round"
-    type="button"
-    (click)="saveOaConfig()"
-  >
-    保存
-    <nz-icon nzType="save" nzTheme="outline" />
-  </button>
+<ng-template #settingsFooter>
+	@if (settingsTabIndex === 1) {
+	<button
+		nz-button
+		nzShape="round"
+		type="button"
+		(click)="closeSettings()"
+	>
+		取消
+		<nz-icon
+			nzType="close"
+			nzTheme="outline"
+		/>
+	</button>
+	<button
+		nz-button
+		nzType="primary"
+		nzShape="round"
+		type="button"
+		(click)="saveOaConfig()"
+	>
+		保存
+		<nz-icon
+			nzType="save"
+			nzTheme="outline"
+		/>
+	</button>
+	} @else {
+	<button
+		nz-button
+		nzType="primary"
+		nzShape="round"
+		type="button"
+		(click)="closeSettings()"
+	>
+		关闭
+		<nz-icon
+			nzType="close"
+			nzTheme="outline"
+		/>
+	</button>
+	}
 </ng-template>
 
 <app-file-drop-overlay
-  [active]="dragActive || extracting"
-  [extracting]="extracting"
+	[active]="dragActive || extracting"
+	[extracting]="extracting"
 ></app-file-drop-overlay>

@@ -5,6 +5,7 @@ export interface InvoiceRecord {
   invoice_type: string;
   invoice_number: string;
   issue_date: string;
+  buyer_name: string;
   seller_name: string;
   tax_items: string;
   quantity: string;
@@ -23,6 +24,10 @@ export interface OaReimbursementProjectConfig {
 
 export interface OaConfigResponse {
   configs: OaReimbursementProjectConfig[];
+}
+
+export interface AppConfigResponse {
+  ocr_dpi: number;
 }
 
 export interface ProgressDto {

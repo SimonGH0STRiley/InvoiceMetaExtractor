@@ -23,8 +23,11 @@ import { NzInputModule } from "ng-zorro-antd/input";
 import { NzMessageService } from "ng-zorro-antd/message";
 import { NzModalModule } from "ng-zorro-antd/modal";
 import { NzPopconfirmModule } from "ng-zorro-antd/popconfirm";
+import { NzRadioModule } from "ng-zorro-antd/radio";
 import { NzSelectModule } from "ng-zorro-antd/select";
 import { NzTableModule } from "ng-zorro-antd/table";
+import { NzTabsModule } from "ng-zorro-antd/tabs";
+import { NzWatermarkModule } from "ng-zorro-antd/watermark";
 
 import { AppToolbarComponent } from "./components/app-toolbar/app-toolbar.component";
 import { FileDropOverlayComponent } from "./components/file-drop-overlay/file-drop-overlay.component";
@@ -61,9 +64,17 @@ type OaPaymentSortKey =
   | "tax_amount"
   | "tax_rate";
 type SortOrder = "ascend" | "descend" | null;
+type OcrDpi = 100 | 150 | 200;
 type OaPaymentNumericFilterKey = "amount" | "tax_amount" | "tax_rate";
 type NumericRangeSide = "min" | "max";
 type OaConfigField = "name" | "code" | "regexp";
+
+interface OcrPrecisionOption {
+  label: string;
+  dpi: OcrDpi;
+  icon: string;
+  description: string;
+}
 
 interface OaReimbursementProjectConfigDraft
   extends OaReimbursementProjectConfig {
@@ -88,8 +99,11 @@ interface OaReimbursementProjectConfigDraft
     NzInputModule,
     NzModalModule,
     NzPopconfirmModule,
+    NzRadioModule,
     NzSelectModule,
     NzTableModule,
+    NzTabsModule,
+    NzWatermarkModule,
     PreviewPanelComponent,
     ResultsTableComponent,
     StatusBarComponent,
@@ -107,6 +121,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   progressPercent = 0;
   dragActive = false;
   dedupeStatusText = "";
+  readonly watermarkContent = [
+    "@SimonGH0STRiley",
+    "GitHub/InvoiceMetaExtractor",
+  ];
   miroModalOpen = false;
   miroSummaryRows: MiroSummaryRow[] = [];
   miroSummaryTotal: Omit<MiroSummaryRow, "taxRate"> = {
@@ -115,8 +133,10 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     total: 0,
   };
   miroTaxRateSortOrder: SortOrder = null;
-  oaConfigModalOpen = false;
   oaConfigDraft: OaReimbursementProjectConfigDraft[] = [];
+  settingsModalOpen = false;
+  settingsTabIndex = 0;
+  ocrDpi: OcrDpi = 150;
   oaPaymentDrawerOpen = false;
   oaPaymentConfigs: OaReimbursementProjectConfig[] = [];
   oaPaymentProjectByRowKey: Record<string, string> = {};
@@ -126,6 +146,26 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ];
   readonly sortDirections: SortOrder[] = ["ascend", "descend", null];
   readonly miroSortDirections: SortOrder[] = ["ascend", "descend"];
+  readonly ocrPrecisionOptions: OcrPrecisionOption[] = [
+    {
+      label: "快速",
+      dpi: 100,
+      icon: "thunderbolt",
+      description: "速度优先，适合清晰 PDF",
+    },
+    {
+      label: "均衡",
+      dpi: 150,
+      icon: "rocket",
+      description: "默认推荐，兼顾速度和准确率",
+    },
+    {
+      label: "高精度",
+      dpi: 200,
+      icon: "search",
+      description: "准确率优先，适合小字或低清扫描件",
+    },
+  ];
   oaPaymentInvoiceTypeFilter = "";
   oaPaymentInvoiceNumberQuery = "";
   oaPaymentSellerQuery = "";
@@ -187,6 +227,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ) {}
 
   ngAfterViewInit(): void {
+    void this.loadAppConfig();
     queueMicrotask(() => this.restorePreviewRatio());
   }
 
@@ -207,6 +248,12 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 
   get selectionStatus(): string {
     return this.paths.length ? `已选 ${this.paths.length} 个文件` : "";
+  }
+
+  setOcrDpi(value: number): void {
+    if (!this.isOcrDpi(value)) return;
+    this.ocrDpi = value;
+    void this.saveOcrDpiConfig(value);
   }
 
   get displayedMiroSummaryRows(): MiroSummaryRow[] {
@@ -377,7 +424,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     );
 
     try {
-      const res = await this.api.uploadAndExtract(supportedFiles);
+      const res = await this.api.uploadAndExtract(supportedFiles, this.ocrDpi);
       if (!res.started) {
         this.setExtracting(false);
         this.statusText = res.message || "无法启动提取";
@@ -402,7 +449,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     this.setExtracting(true);
     this.setProgress(0, this.paths.length, "正在启动...");
     try {
-      const res = await this.api.startExtract(this.paths);
+      const res = await this.api.startExtract(this.paths, this.ocrDpi);
       if (!res.started) {
         this.setExtracting(false);
         this.statusText = res.message || "无法启动提取";
@@ -677,8 +724,9 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async openOaConfig(): Promise<void> {
-    this.oaConfigModalOpen = true;
+  async openSettings(): Promise<void> {
+    this.settingsModalOpen = true;
+    this.settingsTabIndex = 0;
     this.oaConfigDraft = [];
     try {
       this.oaConfigDraft = (await this.loadOaConfigs()).map((config) =>
@@ -689,13 +737,13 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
       this.refreshView();
     } catch (error) {
-      this.oaConfigModalOpen = false;
+      this.settingsModalOpen = false;
       this.message.error(`读取 OA 配置失败: ${this.api.errorMessage(error)}`);
     }
   }
 
-  closeOaConfig(): void {
-    this.oaConfigModalOpen = false;
+  closeSettings(): void {
+    this.settingsModalOpen = false;
     this.oaConfigDraft = [];
   }
 
@@ -744,7 +792,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
     try {
       const res = await this.api.saveOaConfig(configs);
       this.oaPaymentConfigs = res.configs;
-      this.oaConfigModalOpen = false;
+      this.settingsModalOpen = false;
       this.oaConfigDraft = [];
       this.message.success(`已保存 ${configs.length} 个 OA 报销项目配置`);
     } catch (error) {
@@ -1204,6 +1252,32 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       this.previewRatioKey,
       String(this.previewWidth / workspace.clientWidth)
     );
+  }
+
+  private isOcrDpi(value: number): value is OcrDpi {
+    return value === 100 || value === 150 || value === 200;
+  }
+
+  private async loadAppConfig(): Promise<void> {
+    try {
+      const config = await this.api.getAppConfig();
+      if (this.isOcrDpi(config.ocr_dpi)) {
+        this.ocrDpi = config.ocr_dpi;
+      }
+    } catch {
+      this.ocrDpi = 150;
+    }
+  }
+
+  private async saveOcrDpiConfig(value: OcrDpi): Promise<void> {
+    try {
+      const config = await this.api.saveAppConfig(value);
+      if (this.isOcrDpi(config.ocr_dpi)) {
+        this.ocrDpi = config.ocr_dpi;
+      }
+    } catch (error) {
+      this.message.error(`OCR 配置保存失败: ${this.api.errorMessage(error)}`);
+    }
   }
 
   private async exportDrawerTable(request: {

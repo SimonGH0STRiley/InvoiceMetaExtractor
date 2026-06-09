@@ -62,6 +62,11 @@ FIELD_SPECS: list[FieldSpec] = [
         strategy=SpatialStrategy.REGION_BETWEEN,
     ),
     FieldSpec(
+        key="buyer_name",
+        label_aliases=("购买方", "购方", "购买方名称", "名称"),
+        strategy=SpatialStrategy.REGION_BETWEEN,
+    ),
+    FieldSpec(
         key="tax_items",
         label_aliases=("项目名称",),
         strategy=SpatialStrategy.FULL_TEXT,

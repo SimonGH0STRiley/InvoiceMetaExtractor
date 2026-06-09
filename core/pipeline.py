@@ -47,7 +47,7 @@ def _blocks_for_single_page(blocks: list[OcrBlock], page_index: int) -> list[Ocr
 def process_file_records(
     path: Path,
     *,
-    dpi: int = 200,
+    dpi: int = 150,
     on_ocr_page: OcrPageCallback | None = None,
 ) -> list[InvoiceRecord]:
     """Process a single input file, returning one record per invoice page."""
@@ -97,7 +97,7 @@ def process_file_records(
 def process_file(
     path: Path,
     *,
-    dpi: int = 200,
+    dpi: int = 150,
     on_ocr_page: OcrPageCallback | None = None,
 ) -> InvoiceRecord:
     """Process a single PDF or image file and return the first record."""
@@ -105,7 +105,7 @@ def process_file(
     return records[0]
 
 
-def process_file_full(path: Path, *, dpi: int = 200) -> ExtractionResult:
+def process_file_full(path: Path, *, dpi: int = 150) -> ExtractionResult:
     """Process file and return full result with blocks/pages."""
     path = Path(path).resolve()
     pages = load_pages(path, dpi=dpi)
@@ -129,7 +129,7 @@ def _resolve_paths(paths: list[Path], *, recursive: bool = False) -> list[Path]:
 def process_batch(
     paths: list[Path],
     *,
-    dpi: int = 200,
+    dpi: int = 150,
     recursive: bool = False,
     on_progress: ProgressCallback | None = None,
     on_ocr_page: OcrPageCallback | None = None,
@@ -157,7 +157,7 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="小宝的发票工作台")
     parser.add_argument("paths", nargs="+", help="PDF/图片文件或文件夹")
-    parser.add_argument("--dpi", type=int, default=200)
+    parser.add_argument("--dpi", type=int, default=150)
     parser.add_argument("--recursive", action="store_true")
     args = parser.parse_args()
 
@@ -173,6 +173,7 @@ def main() -> None:
             "invoice_type": r.invoice_type,
             "invoice_number": r.invoice_number,
             "issue_date": r.issue_date,
+            "buyer_name": r.buyer_name,
             "seller_name": r.seller_name,
             "tax_items": r.tax_items,
             "quantity": r.quantity,

@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
 import {
+  AppConfigResponse,
   DedupeRecordsResponse,
   ExportResponse,
   ExportTableRequest,
@@ -22,20 +23,23 @@ export class InvoiceApiService {
     return this.get<ProgressDto>("/api/progress");
   }
 
-  startExtract(paths: string[]): Promise<ExtractStartResponse> {
+  startExtract(paths: string[], dpi: number): Promise<ExtractStartResponse> {
     return this.post<ExtractStartResponse>("/api/extract", {
       paths,
-      dpi: 200,
+      dpi,
       recursive: false,
     });
   }
 
-  uploadAndExtract(files: File[]): Promise<ExtractStartResponse> {
+  uploadAndExtract(files: File[], dpi: number): Promise<ExtractStartResponse> {
     const formData = new FormData();
     for (const file of files) {
       formData.append("files", file, file.name);
     }
-    return this.post<ExtractStartResponse>("/api/extract/upload", formData);
+    return this.post<ExtractStartResponse>(
+      `/api/extract/upload?dpi=${encodeURIComponent(String(dpi))}`,
+      formData
+    );
   }
 
   clear(): Promise<unknown> {
@@ -80,6 +84,16 @@ export class InvoiceApiService {
     configs: OaReimbursementProjectConfig[]
   ): Promise<OaConfigResponse> {
     return this.post<OaConfigResponse>("/api/oa-config", { configs });
+  }
+
+  getAppConfig(): Promise<AppConfigResponse> {
+    return this.get<AppConfigResponse>("/api/app-config");
+  }
+
+  saveAppConfig(ocrDpi: number): Promise<AppConfigResponse> {
+    return this.post<AppConfigResponse>("/api/app-config", {
+      ocr_dpi: ocrDpi,
+    });
   }
 
   exportExcel(): Promise<ExportResponse> {

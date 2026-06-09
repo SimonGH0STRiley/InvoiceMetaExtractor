@@ -17,6 +17,15 @@
       nz-button
       nzShape="round"
       [disabled]="extracting || !hasRecords"
+      (click)="exportExcel.emit()"
+    >
+      导出
+      <nz-icon nzType="export" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting || !hasRecords"
       (click)="dedupeRecords.emit()"
     >
       去重
@@ -34,29 +43,11 @@
     <button
       nz-button
       nzShape="round"
-      [disabled]="extracting"
-      (click)="oaConfig.emit()"
-    >
-      OA配置
-      <nz-icon nzType="setting" nzTheme="outline" />
-    </button>
-    <button
-      nz-button
-      nzShape="round"
       [disabled]="extracting || !hasRecords"
       (click)="oaPayment.emit()"
     >
       OA付款
       <nz-icon nzType="transaction" nzTheme="outline" />
-    </button>
-    <button
-      nz-button
-      nzShape="round"
-      [disabled]="extracting || !hasRecords"
-      (click)="exportExcel.emit()"
-    >
-      导出
-      <nz-icon nzType="export" nzTheme="outline" />
     </button>
     <button
       nz-button
@@ -67,6 +58,15 @@
     >
       清空表格
       <nz-icon nzType="clear" nzTheme="outline" />
+    </button>
+    <button
+      nz-button
+      nzShape="round"
+      [disabled]="extracting"
+      (click)="settings.emit()"
+    >
+      设置
+      <nz-icon nzType="setting" nzTheme="outline" />
     </button>
   </div>
 </header>

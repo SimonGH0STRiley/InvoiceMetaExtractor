@@ -251,21 +251,71 @@ def _extract_seller_region(layout: LayoutDocument) -> list[OcrBlock]:
     return region
 
 
-def _parse_dual_name_line(text: str) -> str | None:
-    """双栏发票：两个「名称：」时取后者为销售方。"""
+def _buyer_side_blocks(layout: LayoutDocument, page_index: int = 0) -> list[OcrBlock]:
+    page_blocks = layout.blocks_on_page(page_index)
+    buyer_anchors = [
+        b
+        for b in page_blocks
+        if any(k in b.text.replace(" ", "") for k in ("购买方", "购方"))
+    ]
+    if not buyer_anchors:
+        return []
+
+    buyer_anchor = min(buyer_anchors, key=lambda b: (b.bbox[1], b.mid_x))
+    seller_anchors = [
+        b
+        for b in page_blocks
+        if any(k in b.text.replace(" ", "") for k in ("销售方", "销方"))
+        and b.mid_x > buyer_anchor.mid_x
+    ]
+    if not seller_anchors:
+        return []
+
+    split_x = min(b.mid_x for b in seller_anchors)
+    return [
+        b
+        for b in page_blocks
+        if buyer_anchor.mid_x - 20 <= b.mid_x < split_x - 20
+    ]
+
+
+def _extract_buyer_region(layout: LayoutDocument) -> list[OcrBlock]:
+    side = _buyer_side_blocks(layout)
+    if len(side) >= 2:
+        return side
+
+    page_text = "".join(b.text.replace(" ", "") for b in layout.blocks_on_page(0))
+    region: list[OcrBlock] = []
+    if "购买方" in page_text:
+        region = blocks_between_anchors(layout, "购买方", "销售方")
+    if len(region) < 2 and "购方" in page_text:
+        region = blocks_between_anchors(layout, "购方", "销方")
+    return region
+
+
+def _parse_dual_name_line(text: str, index: int) -> str | None:
+    """双栏发票：两个「名称：」时，前者通常为购买方，后者为销售方。"""
     parts = re.findall(r"名称[：:]\s*([^名称下载]+?)(?=\s*名称|下载|$)", text)
-    if len(parts) >= 2:
-        return parts[1].strip()
+    if len(parts) > index:
+        return parts[index].strip()
     return None
 
 
-def _extract_seller_name(layout: LayoutDocument) -> str:
-    for line in layout.lines:
-        dual = _parse_dual_name_line(line.text)
-        if dual and len(dual) >= 2:
-            return dual
+def _clean_party_name_candidate(text: str) -> str:
+    t = text.strip()
+    if "名称" in t and "：" in t:
+        m = re.search(r"名称[：:]\s*(.+)", t)
+        if m:
+            t = m.group(1).strip()
+    t = re.split(r"纳税人识别号|统一社会信用代码|地址|电话|开户行|账号", t, maxsplit=1)[0]
+    return t.strip(" ：:")
 
-    region = _extract_seller_region(layout)
+
+def _extract_party_name_from_region(
+    layout: LayoutDocument,
+    spec_key: str,
+    region: list[OcrBlock],
+) -> str:
     name_blocks = []
     for b in region:
         t = b.text.strip()
@@ -277,10 +327,7 @@ def _extract_seller_name(layout: LayoutDocument) -> str:
             continue
         if RE_TAX_ID.match(re.sub(r"\s", "", t)) and not re.search(r"[A-Z]", t, re.I):
             continue
-        if "名称" in t and "：" in t:
-            m = re.search(r"名称[：:]\s*(.+)", t)
-            if m:
-                t = m.group(1).strip()
+        t = _clean_party_name_candidate(t)
         if len(t) >= 2 and not re.match(r"^[\d¥%.]+$", t):
             name_blocks.append((b.bbox[1], b.mid_x, t))
 
@@ -288,8 +335,34 @@ def _extract_seller_name(layout: LayoutDocument) -> str:
         texts = [x[2] for x in name_blocks]
         return max(texts, key=len)
 
-    val = _extract_from_anchors(layout, next(s for s in FIELD_SPECS if s.key == "seller_name"), region)
+    val = _extract_from_anchors(layout, next(s for s in FIELD_SPECS if s.key == spec_key), region)
     return val or ""
+
+
+def _extract_buyer_name(layout: LayoutDocument) -> str:
+    for line in layout.lines:
+        dual = _parse_dual_name_line(line.text, 0)
+        if dual and len(dual) >= 2:
+            return _clean_party_name_candidate(dual)
+
+    return _extract_party_name_from_region(
+        layout,
+        "buyer_name",
+        _extract_buyer_region(layout),
+    )
+
+
+def _extract_seller_name(layout: LayoutDocument) -> str:
+    for line in layout.lines:
+        dual = _parse_dual_name_line(line.text, 1)
+        if dual and len(dual) >= 2:
+            return _clean_party_name_candidate(dual)
+
+    return _extract_party_name_from_region(
+        layout,
+        "seller_name",
+        _extract_seller_region(layout),
+    )
 
 
 _NEXT_COLUMN_MARKERS = ("规格型号", "单位", "数量", "单价", "金额", "税率", "税额", "征收率")
@@ -676,6 +749,7 @@ _FIELD_EXTRACTORS: dict[str, Callable[[LayoutDocument], str | float | None]] = {
     "invoice_type": _extract_invoice_type,
     "invoice_number": _extract_invoice_number,
     "issue_date": _extract_issue_date,
+    "buyer_name": _extract_buyer_name,
     "seller_name": _extract_seller_name,
     "tax_items": _extract_tax_items,
     "amount": lambda lay: _extract_money_field(lay, "amount"),
@@ -703,6 +777,7 @@ def extract_fields(blocks: list[OcrBlock], source_file: str) -> InvoiceRecord:
     record.invoice_type = str(_FIELD_EXTRACTORS["invoice_type"](layout) or "")
     record.invoice_number = str(_FIELD_EXTRACTORS["invoice_number"](layout) or "")
     record.issue_date = str(_FIELD_EXTRACTORS["issue_date"](layout) or "")
+    record.buyer_name = str(_FIELD_EXTRACTORS["buyer_name"](layout) or "")
     record.seller_name = str(_FIELD_EXTRACTORS["seller_name"](layout) or "")
     record.tax_items = str(_FIELD_EXTRACTORS["tax_items"](layout) or "")
     record.line_items = _extract_line_items(layout)

@@ -15,8 +15,8 @@ export class AppToolbarComponent {
   @Input({ required: true }) hasRecords = false;
 
   @Output() miroSummary = new EventEmitter<void>();
-  @Output() oaConfig = new EventEmitter<void>();
   @Output() oaPayment = new EventEmitter<void>();
+  @Output() settings = new EventEmitter<void>();
   @Output() selectFiles = new EventEmitter<void>();
   @Output() dedupeRecords = new EventEmitter<void>();
   @Output() exportExcel = new EventEmitter<void>();

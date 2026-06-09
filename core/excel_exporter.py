@@ -24,11 +24,11 @@ HEADERS = [
 
     "文件名",
 
-    "发票类型",
-
     "发票号码",
 
     "开票日期",
+
+    "购买方名称",
 
     "销售方名称",
 
@@ -41,6 +41,8 @@ HEADERS = [
     "税额",
 
     "税率",
+
+    "发票类型",
 
     "校验",
 
@@ -76,11 +78,11 @@ def _row_from_record(r: InvoiceRecord, *, include_path: bool = False) -> list:
 
         Path(r.source_file).name,
 
-        r.invoice_type,
-
         r.invoice_number,
 
         r.issue_date,
+
+        r.buyer_name,
 
         r.seller_name,
 
@@ -93,6 +95,8 @@ def _row_from_record(r: InvoiceRecord, *, include_path: bool = False) -> list:
         r.tax_amount,
 
         r.tax_rate,
+
+        r.invoice_type,
 
         _validation_status_text(r),
 

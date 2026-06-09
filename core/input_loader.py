@@ -30,7 +30,7 @@ def input_type_for(path: Path) -> str:
     return "pdf" if path.suffix.lower() == ".pdf" else "image"
 
 
-def load_pages(path: Path, *, dpi: int = 200) -> list[PageImage]:
+def load_pages(path: Path, *, dpi: int = 150) -> list[PageImage]:
     """PDF → multi-page render; image → single-page list."""
     path = Path(path).resolve()
     ext = path.suffix.lower()

@@ -29,12 +29,19 @@ import {
 
 type SortKey = "" | "issue_date" | "amount" | "tax_amount" | "tax_rate";
 type SortOrder = "ascend" | "descend" | null;
-type NumericFilterKey = "amount" | "tax_amount" | "tax_rate";
+type NumericFilterKey = "tax_rate";
 type NumericRangeSide = "min" | "max";
+interface TableTotals {
+  amount: number;
+  taxAmount: number;
+  total: number;
+}
+
 type EditableTextField =
   | "invoice_type"
   | "invoice_number"
   | "issue_date"
+  | "buyer_name"
   | "seller_name"
   | "tax_items"
   | "quantity"
@@ -95,8 +102,6 @@ export class ResultsTableComponent {
   invoiceNumberQuery = "";
   sellerQuery = "";
   taxItemsQuery = "";
-  amountRange = { min: "", max: "" };
-  taxAmountRange = { min: "", max: "" };
   taxRateRange = { min: "", max: "" };
   sortKey: SortKey = "";
   sortOrder: SortOrder = null;
@@ -136,16 +141,27 @@ export class ResultsTableComponent {
     return [summary, countText].filter(Boolean).join(" · ");
   }
 
+  get tableTotals(): TableTotals {
+    return this.displayedRecords.reduce(
+      (totals, record) => {
+        const amount = this.safeNumber(record.amount);
+        const taxAmount = this.safeNumber(record.tax_amount);
+        return {
+          amount: totals.amount + amount,
+          taxAmount: totals.taxAmount + taxAmount,
+          total: totals.total + amount + taxAmount,
+        };
+      },
+      { amount: 0, taxAmount: 0, total: 0 }
+    );
+  }
+
   private get hasActiveFilters(): boolean {
     return Boolean(
       this.invoiceTypeFilter ||
         this.invoiceNumberQuery.trim() ||
         this.sellerQuery.trim() ||
         this.taxItemsQuery.trim() ||
-        this.amountRange.min ||
-        this.amountRange.max ||
-        this.taxAmountRange.min ||
-        this.taxAmountRange.max ||
         this.taxRateRange.min ||
         this.taxRateRange.max
     );
@@ -213,8 +229,13 @@ export class ResultsTableComponent {
     this.invoiceTypeFilter = value;
   }
 
-  setInvoiceTypeFilterFromNz(values: string[]): void {
-    this.invoiceTypeFilter = values[0] || "";
+  setInvoiceTypeFilterFromNz(values: string[] | string | null): void {
+    this.invoiceTypeFilter = this.normalizeInvoiceTypeFilter(values);
+  }
+
+  private normalizeInvoiceTypeFilter(values: string[] | string | null): string {
+    if (Array.isArray(values)) return values[0] || "";
+    return values || "";
   }
 
   setTextFilter(
@@ -243,8 +264,6 @@ export class ResultsTableComponent {
     this.invoiceNumberQuery = "";
     this.sellerQuery = "";
     this.taxItemsQuery = "";
-    this.amountRange = { min: "", max: "" };
-    this.taxAmountRange = { min: "", max: "" };
     this.taxRateRange = { min: "", max: "" };
   }
 
@@ -361,12 +380,6 @@ export class ResultsTableComponent {
     if (!this.includesQuery(record.tax_items, this.taxItemsQuery)) {
       return false;
     }
-    if (!this.inRange(record.amount, this.amountRange)) {
-      return false;
-    }
-    if (!this.inRange(record.tax_amount, this.taxAmountRange)) {
-      return false;
-    }
     return this.inRange(this.parseTaxRate(record.tax_rate), this.taxRateRange);
   }
 
@@ -431,6 +444,10 @@ export class ResultsTableComponent {
     return left - right;
   }
 
+  private safeNumber(value: number | null): number {
+    return typeof value === "number" && Number.isFinite(value) ? value : 0;
+  }
+
   private parseDate(value: string): number | null {
     const time = Date.parse(value);
     return Number.isFinite(time) ? time : null;
@@ -468,8 +485,6 @@ export class ResultsTableComponent {
   }
 
   private rangeFor(field: NumericFilterKey): { min: string; max: string } {
-    if (field === "amount") return this.amountRange;
-    if (field === "tax_amount") return this.taxAmountRange;
     return this.taxRateRange;
   }
 }

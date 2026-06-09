@@ -14,6 +14,7 @@ class InvoiceRecordDto(BaseModel):
     invoice_type: str = ""
     invoice_number: str = ""
     issue_date: str = ""
+    buyer_name: str = ""
     seller_name: str = ""
     tax_items: str = ""
     quantity: str = ""
@@ -25,7 +26,7 @@ class InvoiceRecordDto(BaseModel):
 
 class ExtractRequest(BaseModel):
     paths: List[str]
-    dpi: int = 200
+    dpi: int = 150
     recursive: bool = False
 
 
@@ -49,6 +50,10 @@ class OaConfigDto(BaseModel):
 
 class OaConfigResponse(BaseModel):
     configs: List[OaConfigDto] = Field(default_factory=list)
+
+
+class AppConfigResponse(BaseModel):
+    ocr_dpi: int = 150
 
 
 class RemoveRecordRequest(BaseModel):
